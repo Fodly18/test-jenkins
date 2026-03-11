@@ -4,18 +4,19 @@ node {
 
     // 1. Build Stage
     stage("Build") {
-        // Gunakan image PHP yang lebih baru (8.2) agar sesuai dengan Laravel modern
-        docker.image('composer:latest').inside('-u root') {
+        // Menggunakan composer terbaru yang mendukung PHP 8.4
+        docker.image('composer:latest').inside('-u root') { 
+            // Mengatasi error 'dubious ownership'
+            sh 'git config --global --add safe.directory /var/lib/jenkins/workspace/laravel-dev'
             sh 'composer install --no-interaction --prefer-dist'
         }
     }
 
-    // 2. Testing Stage (Penting untuk tugas akhir)
     stage("Testing") {
-        docker.image('php:8.2-cli').inside('-u root') {
+        // Menggunakan PHP 8.4 sesuai permintaan error tadi
+        docker.image('php:8.4-cli').inside('-u root') {
             sh 'cp .env.example .env'
             sh 'php artisan key:generate'
-            // Menjalankan unit test asli Laravel
             sh 'php artisan test'
         }
     }
