@@ -22,16 +22,12 @@ node {
     }
 
     // 3. Deploy Stage
-    stage("Deploy") {
-        // Pastikan plugin SSH Agent sudah kamu instal di Jenkins tadi
+stage("Deploy") {
         docker.image('instrumentisto/rsync-ssh').inside('-u root') {
-            // 'ssh-prod' adalah ID Kredensial yang harus kamu buat di Jenkins
             sshagent (credentials: ['ssh-prod']) {
-                sh 'mkdir -p ~/.ssh'
-                // Pastikan variabel PROD_HOST sudah didaftarkan di Jenkins Environment
-                sh "ssh-keyscan -H ${env.PROD_HOST} >> ~/.ssh/known_hosts"
-                // Perhatikan path ./ (root) jika file Laravel tidak di dalam subfolder
-                sh "rsync -rav --delete ./ ubuntu@${env.PROD_HOST}:/home/ubuntu/laravel-app/ --exclude=.env --exclude=storage --exclude=.git --exclude=vendor"
+                // Kita ganti rsync agar mengabaikan pengecekan host key
+                // Dan pastikan path rsync-nya benar
+                sh "rsync -rav -e 'ssh -o StrictHostKeyChecking=no' --delete ./ ${env.USER_SERVER}@${env.PROD_HOST}:/home/${env.USER_SERVER}/laravel-jenkins/ --exclude=.env --exclude=storage --exclude=.git --exclude=vendor"
             }
         }
     }
